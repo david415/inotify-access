@@ -6,6 +6,7 @@ import time
 from optparse import OptionParser
 from pyinotify import WatchManager, Notifier, ThreadedNotifier, EventsCodes, ProcessEvent
 
+# needs: apt-get install python-pyinotify
 
 class EventHandler(ProcessEvent):
     def __init__(self, file_dict):
@@ -19,7 +20,12 @@ class EventHandler(ProcessEvent):
 
 def main():
 
-    parser = OptionParser(usage="usage: %prog [dir-name]")
+    parser = OptionParser(usage="usage: %prog [options] <dir-name>")
+    parser.add_option("-r", "--recurse",
+                  action="store_true", dest="recurse", default=False,
+                  help="recurse: watch all files in the directory tree")
+    parser.add_option('-t', '--timeout', dest='timeout', default=0, type='int',
+                        help='Timeout in seconds before reporting stats (default: wait for control-c)') 
     options, args = parser.parse_args()
 
     if len(args) != 1:
@@ -28,26 +34,34 @@ def main():
 
     watched_dir = args[0]
 
-    print "Gathering stats for %s" % watched_dir
+    print "Gathering file access stats for files in %s" % watched_dir
     print "hit control-c to exit"
 
-    file_hash = {}
+    files = {}
 
     wm = WatchManager()
     mask = EventsCodes.IN_ACCESS
-    handler = EventHandler(file_hash)
+    handler = EventHandler(files)
     notifier = ThreadedNotifier(wm, handler)
     notifier.start()
-    wdd = wm.add_watch('/tmp', mask, rec=True)
+    wdd = wm.add_watch(watched_dir, mask, rec=options.recurse)
 
+    
     try:
         while True:
-            time.sleep(10)
+            if options.timeout == 0:
+                time.sleep(60)
+            else:
+                time.sleep(options.timeout)
+                break
     except KeyboardInterrupt:
-        print "caught control-c"
-        print "file_hash:"
-        print file_hash
-        return 0
+        print "caught control-c\n"
+
+    print "number of accesses (reads) per file:"
+    for k,v in files.items():
+        print "%s: %s" % (k,v)
+
+    return 0
 
     
 if __name__ == '__main__':
