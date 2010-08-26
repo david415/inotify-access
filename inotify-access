@@ -58,7 +58,7 @@ def main():
         print "caught control-c\n"
 
     print "number of accesses (reads) per file:"
-    for k,v in files.items():
+    for k,v in sorted(files.items(), key=lambda x:x[1]):
         print "%s: %s" % (k,v)
 
     return 0
