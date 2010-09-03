@@ -1,0 +1,14 @@
+
+Usage: inotify-access [options] <dir-name>
+
+Options:
+  -h, --help            show this help message and exit
+  -r, --recurse         recurse: watch all files in the directory tree
+  -t TIMEOUT, --timeout=TIMEOUT
+                        Timeout in seconds before reporting stats (default:
+                        wait for control-c)
+
+
+This utility is useful for determining the number of reads (for a given time duration) files in a given directory receive.
+When analyzing Cassandra performance this may be particularly useful...
+
